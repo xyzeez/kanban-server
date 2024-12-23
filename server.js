@@ -19,7 +19,7 @@ const app = require('./app');
 // Variables
 const DB = process.env.KANBAN_DB;
 
-// Server
+// Server setup
 const init = () => {
   monitorUncaughtRejection();
 

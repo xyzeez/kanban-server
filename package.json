@@ -4,15 +4,17 @@
   "description": "A mongoDB server for my kanban web app.",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "SET NODE_ENV=development&&nodemon server.js",
     "start:prod": "SET NODE_ENV=production&&nodemon server.js",
     "debug": "ndb server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.2",
     "validator": "^13.12.0"
   },
