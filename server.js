@@ -8,14 +8,16 @@ dotenv.config();
 const {
   monitorUncaughtRejection,
   monitorUnhandledRejection
-} = require('./utils');
+} = require('./utils/monitorRejections');
 
 // Configs
 const { PORT } = require('./config');
 
+// App
+const app = require('./app');
+
 // Variables
 const DB = process.env.KANBAN_DB;
-const app = require('./app');
 
 // Server
 const init = () => {
