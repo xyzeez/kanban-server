@@ -57,3 +57,12 @@ exports.login = catchAsyncError(async (req, res, next) => {
 
   createSendToken(user, 200, res);
 });
+
+exports.logout = (req, res) => {
+  res.cookie('authToken', undefined, {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true
+  });
+
+  res.status(200).json({ status: 'success' });
+};
