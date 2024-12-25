@@ -1,10 +1,12 @@
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-
-// Utils
-const catchAsyncError = require('../utils/catchAsyncError');
+const { isJWT } = require('validator');
 
 // Models
 const User = require('../models/user');
+
+// Utils
+const catchAsyncError = require('../utils/catchAsyncError');
 const AppError = require('../utils/appError');
 
 // Helpers
@@ -33,6 +35,47 @@ const createSendToken = (user, statusCode, res) => {
     }
   });
 };
+
+// Middlewares
+exports.protectRoute = catchAsyncError(async (req, res, next) => {
+  const { authorization } = req.headers;
+
+  if (
+    (!authorization || !authorization.startsWith('Bearer')) &&
+    !req.cookies?.authToken
+  ) {
+    return next(new AppError('Authentication failed. Please login.', 401));
+  }
+
+  const token = authorization?.split(' ')[1] || req.cookies?.authToken;
+
+  if (!token || !isJWT(token)) {
+    return next(new AppError('Authentication failed. Please login.', 401));
+  }
+
+  const { id, iat } = await promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET_KEY
+  );
+
+  const user = await User.findById(id).select('+isActive');
+
+  if (!user || !user.isActive) {
+    return next(
+      new AppError('User account is inactive or no longer exists.', 401)
+    );
+  }
+
+  if (user.validatePasswordChange(iat)) {
+    return next(
+      new AppError('Password recently changed. Please login again.', 401)
+    );
+  }
+
+  req.user = user;
+
+  next();
+});
 
 // Handlers
 exports.register = catchAsyncError(async (req, res, next) => {

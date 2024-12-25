@@ -57,6 +57,19 @@ userSchema.methods.validatePassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+userSchema.methods.validatePasswordChange = function (JWTInitiatedDate) {
+  if (this.passwordChangedAt) {
+    const passwordChangedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return passwordChangedTimestamp > JWTInitiatedDate;
+  }
+
+  return false;
+};
+
 // Middleware
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

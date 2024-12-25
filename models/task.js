@@ -1,17 +1,23 @@
-const { model, Schema, SchemaType } = require('mongoose');
-
-// Utils
-const AppError = require('../utils/appError');
-const catchAsyncError = require('../utils/catchAsyncError');
-const validateAssignedUser = require('../utils/validateAssignedUser');
-
-// Helpers
-const validateSubtasksLength = (subtasks) => {
-  return subtasks.length > 0;
-};
+const { model, Schema } = require('mongoose');
 
 // Models
 const Board = require('./board');
+
+// Utils
+const AppError = require('../utils/appError');
+
+// Helpers
+const validateSubtasksLength = (subtasks) => {
+  if (subtasks.length === 0) return true;
+
+  return subtasks.every((subtask) => {
+    return (
+      typeof subtask.title === 'string' &&
+      subtask.title.length >= 2 &&
+      subtask.title.length <= 50
+    );
+  });
+};
 
 // Schemas
 const subtaskSchema = new Schema({
@@ -24,8 +30,7 @@ const subtaskSchema = new Schema({
   },
   completed: {
     type: Boolean,
-    default: false,
-    required: true
+    default: false
   }
 });
 
@@ -35,43 +40,39 @@ const taskSchema = new Schema(
       type: String,
       trim: true,
       required: [true, 'Task title is required.'],
-      minlength: [3, 'Task title must be at least 3 characters long.'],
-      maxlength: [150, 'Task title cannot exceed 150 characters.']
+      minlength: [2, 'Task title must be at least 3 characters long.'],
+      maxlength: [15, 'Task title cannot exceed 150 characters.']
     },
     description: {
       type: String,
       trim: true,
-      maxlength: [500, 'Task description cannot exceed 500 characters.']
+      maxlength: [50, 'Task description cannot exceed 500 characters.']
     },
     subtasks: {
       type: [subtaskSchema],
+      default: [],
       validate: [
         validateSubtasksLength,
-        'A task must have at least one subtask.'
+        'Each subtask must be a string of 2-50 characters long'
       ]
     },
-    column: {
-      type: String,
-      trim: true,
-      required: [true, 'Task column is required.']
-    },
-    board: {
-      type: SchemaType.ObjectId,
+    boardId: {
+      type: Schema.Types.ObjectId,
       ref: 'Board',
       required: [true, 'Task board id is required.']
     },
-    OwnerId: {
-      type: SchemaType.ObjectId,
-      ref: 'User',
-      required: [validateAssignedUser, 'Task user id is required.']
+    columnId: {
+      type: String,
+      trim: true,
+      required: [true, 'Task column id is required.']
     }
   },
   { timestamps: true }
 );
 
-// Compound indexing
+// Schema indexing
 taskSchema.index(
-  { name: 1, board: 1 },
+  { title: 1, boardId: 1, columnId: 1 },
   {
     unique: true,
     collation: { locale: 'en', strength: 2 }
@@ -79,28 +80,32 @@ taskSchema.index(
 );
 
 // Middlewares
-taskSchema.pre(
-  'save',
-  catchAsyncError(async function (next) {
-    if (!this.isModified('column')) return next();
+taskSchema.pre('save', async function (next) {
+  if (!this.isModified('columnId')) return next();
 
-    const board = await Board.findById(this.board);
+  const board = await Board.findById(this.boardId);
 
-    if (!board) {
-      return next(
-        new AppError('The board associated with this task does not exist.', 400)
-      );
-    }
+  if (!board) {
+    return next(
+      new AppError('The board associated with this task does not exist.', 400)
+    );
+  }
 
-    if (!board.columns.includes(this.column)) {
-      return next(
-        new AppError(`Column must be one of: ${board.columns.join(', ')}.`, 400)
-      );
-    }
+  const boardcolumnId = board.columns.map((col) => col.id);
 
-    next();
-  })
-);
+  if (!boardcolumnId.includes(this.columnId)) {
+    return next(
+      new AppError(
+        `Column must be one of: ${board.columns
+          .map((col) => col.title)
+          .join(', ')}.`,
+        400
+      )
+    );
+  }
+
+  next();
+});
 
 taskSchema.post('save', function (error, doc, next) {
   if (error.code === 11000 && error.keyValue.name) {
