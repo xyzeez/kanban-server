@@ -2,6 +2,9 @@ const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const { isJWT } = require('validator');
 
+// Configs
+const { COOKIE_EXPIRY_DAYS, JWT_EXPIRES_IN } = require('../config');
+
 // Models
 const User = require('../models/user');
 
@@ -11,7 +14,9 @@ const AppError = require('../utils/appError');
 
 // Helpers
 const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET_KEY);
+  return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: JWT_EXPIRES_IN
+  });
 };
 
 const createSendToken = (user, statusCode, res) => {
@@ -20,7 +25,8 @@ const createSendToken = (user, statusCode, res) => {
   const cookieOptions = {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'strict'
+    sameSite: 'strict',
+    maxAge: COOKIE_EXPIRY_DAYS
   };
 
   res.cookie('authToken', token, cookieOptions);
@@ -30,9 +36,7 @@ const createSendToken = (user, statusCode, res) => {
   res.status(statusCode).json({
     status: 'success',
     token,
-    data: {
-      user
-    }
+    user
   });
 };
 
