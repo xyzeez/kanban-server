@@ -11,13 +11,10 @@ const {
 } = require('./utils/monitorRejections');
 
 // Configs
-const { PORT } = require('./config');
+const { PORT, DB } = require('./config');
 
 // App
 const app = require('./app');
-
-// Variables
-const DB = process.env.KANBAN_DB;
 
 // Server setup
 const init = () => {
