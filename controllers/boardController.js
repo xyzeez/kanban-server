@@ -88,6 +88,21 @@ exports.updateBoard = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.deleteBoard = catchAsyncError(async (req, res, next) => {
+  const board = await Board.findByIdAndDelete(req.params.id);
+
+  if (!board) {
+    return next(new AppError('Board not found.', 404));
+  }
+
+  await Task.deleteMany({ boardId: board._id });
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
 exports.getBoards = catchAsyncError(async (req, res, next) => {
   const boards = await Board.find({ ownerId: req.user.id });
 

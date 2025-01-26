@@ -5,7 +5,8 @@ const { protectRoute } = require('../controllers/authController');
 const {
   createBoard,
   updateBoard,
-  getBoards
+  getBoards,
+  deleteBoard
 } = require('../controllers/boardController');
 const { createTask, updateTask } = require('../controllers/taskController');
 
@@ -18,7 +19,7 @@ router.use(protectRoute);
 // Endpoints
 router.route('/').post(createBoard).get(getBoards);
 
-router.route('/:id').patch(updateBoard);
+router.route('/:id').patch(updateBoard).delete(deleteBoard);
 
 router.route('/:boardId/columns/:columnId/tasks').post(createTask);
 
