@@ -91,10 +91,6 @@ exports.updateBoard = catchAsyncError(async (req, res, next) => {
 exports.getBoards = catchAsyncError(async (req, res, next) => {
   const boards = await Board.find({ ownerId: req.user.id });
 
-  if (!boards || boards.length === 0) {
-    return next(new AppError('No boards found for this user.', 404));
-  }
-
   res.status(200).json({
     status: 'success',
     data: { boards }

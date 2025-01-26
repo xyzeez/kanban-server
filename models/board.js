@@ -1,4 +1,5 @@
 const { model, Schema } = require('mongoose');
+const slugify = require('slugify');
 
 // Models
 const User = require('./user');
@@ -95,11 +96,32 @@ boardSchema.index(
   }
 );
 
+// Virtuals
+boardSchema.virtual('slug').get(function () {
+  return slugify(this.name, { lower: true, strict: true });
+});
+
 // Middlewares
 boardSchema.pre('save', async function (next) {
   if (!this.isNew) return next();
 
   this.unassignedColumn = { title: 'unassigned' };
+
+  next();
+});
+
+boardSchema.pre('save', async function (next) {
+  if (this.name) {
+    this.name = this.name.replace(/\s+/g, ' ');
+  }
+
+  if (this.columns && this.columns.length) {
+    this.columns.forEach((column) => {
+      if (column.title) {
+        column.title = column.title.replace(/\s+/g, ' ').trim();
+      }
+    });
+  }
 
   next();
 });
