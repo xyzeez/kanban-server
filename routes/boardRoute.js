@@ -2,7 +2,11 @@ const express = require('express');
 
 // Controllers
 const { protectRoute } = require('../controllers/authController');
-const { createBoard, updateBoard } = require('../controllers/boardController');
+const {
+  createBoard,
+  updateBoard,
+  getBoards
+} = require('../controllers/boardController');
 const { createTask, updateTask } = require('../controllers/taskController');
 
 // Router
@@ -12,7 +16,7 @@ const router = express.Router({ mergeParams: true });
 router.use(protectRoute);
 
 // Endpoints
-router.route('/').post(createBoard);
+router.route('/').post(createBoard).get(getBoards);
 
 router.route('/:id').patch(updateBoard);
 

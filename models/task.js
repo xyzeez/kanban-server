@@ -67,7 +67,13 @@ const taskSchema = new Schema(
       required: [true, 'Task column id is required.']
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      versionKey: false
+    }
+  }
 );
 
 // Schema indexing

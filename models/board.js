@@ -38,7 +38,6 @@ const columnSchema = new Schema({
     type: String,
     trim: true,
     lowercase: true,
-    unique: true,
     required: [true, 'Column title is required'],
     minlength: [3, 'Column title must be at least 3 characters long'],
     maxlength: [50, 'Column title cannot exceed 50 characters']
@@ -79,7 +78,11 @@ const boardSchema = new Schema(
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      versionKey: false
+    }
   }
 );
 

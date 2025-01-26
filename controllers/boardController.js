@@ -53,10 +53,7 @@ const moveTasksToUnassigned = async (board, columnIds) => {
 exports.createBoard = catchAsyncError(async (req, res, next) => {
   const { name, columns } = req.body;
 
-  const columnsData =
-    columns && columns.length > 0
-      ? columns.map((col) => ({ title: col }))
-      : undefined;
+  const columnsData = columns && columns.length > 0 ? columns : undefined;
 
   const board = await Board.create({
     name,
@@ -88,5 +85,18 @@ exports.updateBoard = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: { board: updatedBoard }
+  });
+});
+
+exports.getBoards = catchAsyncError(async (req, res, next) => {
+  const boards = await Board.find({ ownerId: req.user.id });
+
+  if (!boards || boards.length === 0) {
+    return next(new AppError('No boards found for this user.', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { boards }
   });
 });
