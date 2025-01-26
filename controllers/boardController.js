@@ -67,6 +67,26 @@ exports.createBoard = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.getBoards = catchAsyncError(async (req, res, next) => {
+  const boards = await Board.find({ ownerId: req.user.id }).select('id name');
+
+  res.status(200).json({
+    status: 'success',
+    data: { boards }
+  });
+});
+
+exports.getBoard = catchAsyncError(async (req, res, next) => {
+  const board = await Board.findById(req.params.id).select(
+    'id name columns unassignedColumn'
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: { board }
+  });
+});
+
 exports.updateBoard = catchAsyncError(async (req, res, next) => {
   const { name, columns: newColumns } = req.body;
 
@@ -100,14 +120,5 @@ exports.deleteBoard = catchAsyncError(async (req, res, next) => {
   res.status(204).json({
     status: 'success',
     data: null
-  });
-});
-
-exports.getBoards = catchAsyncError(async (req, res, next) => {
-  const boards = await Board.find({ ownerId: req.user.id });
-
-  res.status(200).json({
-    status: 'success',
-    data: { boards }
   });
 });

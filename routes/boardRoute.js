@@ -6,7 +6,8 @@ const {
   createBoard,
   updateBoard,
   getBoards,
-  deleteBoard
+  deleteBoard,
+  getBoard
 } = require('../controllers/boardController');
 const { createTask, updateTask } = require('../controllers/taskController');
 
@@ -19,7 +20,7 @@ router.use(protectRoute);
 // Endpoints
 router.route('/').post(createBoard).get(getBoards);
 
-router.route('/:id').patch(updateBoard).delete(deleteBoard);
+router.route('/:id').get(getBoard).patch(updateBoard).delete(deleteBoard);
 
 router.route('/:boardId/columns/:columnId/tasks').post(createTask);
 
