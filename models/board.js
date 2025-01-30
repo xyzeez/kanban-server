@@ -98,7 +98,7 @@ boardSchema.index(
 
 // Virtuals
 boardSchema.virtual('slug').get(function () {
-  return slugify(this.name, { lower: true, strict: true });
+  return `${this.id}/${slugify(this.name, { lower: true, strict: true, replacement: '_' })}`;
 });
 
 // Middlewares
