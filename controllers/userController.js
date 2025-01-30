@@ -12,12 +12,3 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
     user
   });
 });
-
-exports.getMe = catchAsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-
-  res.status(201).json({
-    status: 'success',
-    user
-  });
-});

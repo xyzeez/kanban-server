@@ -113,3 +113,12 @@ exports.logout = (req, res) => {
 
   res.status(200).json({ status: 'success' });
 };
+
+exports.getCurrentAuthUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  res.status(201).json({
+    status: 'success',
+    user
+  });
+});
