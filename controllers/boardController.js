@@ -122,3 +122,36 @@ exports.deleteBoard = catchAsyncError(async (req, res, next) => {
     data: null
   });
 });
+
+exports.addColumns = catchAsyncError(async (req, res, next) => {
+  const { columns } = req.body;
+  const boardId = req.params.id;
+
+  const board = await Board.findById(boardId);
+
+  if (!board) {
+    return next(new AppError('Board not found.', 404));
+  }
+
+  if (!columns) {
+    return next(new AppError('Column data is required.', 400));
+  }
+
+  board.columns.push(...columns);
+
+  const updatedBoard = await board.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: { board: updatedBoard }
+  });
+});
+
+exports.getColumns = catchAsyncError(async (req, res, next) => {
+  const board = await Board.findById(req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    data: { columns: board.columns }
+  });
+});

@@ -34,16 +34,24 @@ const validateColumnsUnique = (columns) => {
 };
 
 // Schemas
-const columnSchema = new Schema({
-  title: {
-    type: String,
-    trim: true,
-    lowercase: true,
-    required: [true, 'Column title is required'],
-    minlength: [3, 'Column title must be at least 3 characters long'],
-    maxlength: [50, 'Column title cannot exceed 50 characters']
+const columnSchema = new Schema(
+  {
+    title: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: [true, 'Column title is required'],
+      minlength: [3, 'Column title must be at least 3 characters long'],
+      maxlength: [50, 'Column title cannot exceed 50 characters']
+    }
+  },
+  {
+    toJSON: {
+      virtuals: true,
+      versionKey: false
+    }
   }
-});
+);
 
 const boardSchema = new Schema(
   {
