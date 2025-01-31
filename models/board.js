@@ -97,10 +97,11 @@ const boardSchema = new Schema(
 
 // Schema Index
 boardSchema.index(
-  { name: 1, ownerId: 1 },
+  { ownerId: 1, name: 1 },
   {
     unique: true,
-    collation: { locale: 'en', strength: 2 }
+    collation: { locale: 'en', strength: 2, caseLevel: false },
+    name: 'unique_board_name_per_user'
   }
 );
 
