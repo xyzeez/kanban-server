@@ -7,66 +7,81 @@ const catchAsyncError = require('../utils/catchAsyncError');
 const AppError = require('../utils/appError');
 
 // Helpers
+const moveTasksToUnassigned = async (board, columnIds) => {
+  // First check if there are any tasks in the columns being removed
+  const tasksExist = await Task.exists({ columnId: { $in: columnIds } });
+
+  if (tasksExist) {
+    await Task.updateMany(
+      { columnId: { $in: columnIds } },
+      { columnId: board.unassignedColumn.id }
+    );
+    return true; // Return true if tasks were moved
+  }
+  return false; // Return false if no tasks were moved
+};
+
 const updateBoardColumns = async (board, newColumns) => {
+  // Handle case when board has no columns
   if (board.columns.length === 0) {
     board.columns = newColumns || [];
     return;
   }
 
+  // Handle case when all columns are being removed
   if (!newColumns?.length) {
-    await moveTasksToUnassigned(
+    const hasMovedTasks = await moveTasksToUnassigned(
       board,
       board.columns.map((col) => col.id)
     );
-    board.columns = [board.unassignedColumn];
+    board.columns = hasMovedTasks ? [board.unassignedColumn] : [];
     return;
   }
 
-  const existingColumnIds = board.columns.map((col) => col.id);
-  const newColumnIds = newColumns.map((col) => col.id);
-
-  const remainingColumnIds = existingColumnIds.filter((id) =>
-    newColumnIds.includes(id)
+  // Check for duplicate column IDs in new columns
+  const duplicateIds = newColumns.filter(
+    (col, index) => newColumns.findIndex((c) => c.id === col.id) !== index
   );
-  const removedColumnIds = existingColumnIds.filter(
-    (id) => !remainingColumnIds.includes(id)
-  );
-
-  if (removedColumnIds.length > 0) {
-    await moveTasksToUnassigned(board, removedColumnIds);
+  if (duplicateIds.length > 0) {
+    throw new AppError('Duplicate column IDs are not allowed', 400);
   }
 
-  board.columns = [
-    ...board.columns.filter((col) => remainingColumnIds.includes(col.id)),
-    ...newColumns.filter((col) => !remainingColumnIds.includes(col.id))
-  ];
-};
+  const existingColumnIds = new Set(board.columns.map((col) => col.id));
+  const newColumnIds = new Set(newColumns.map((col) => col.id));
 
-const moveTasksToUnassigned = async (board, columnIds) => {
-  await Task.updateMany(
-    { columnId: { $in: columnIds } },
-    { columnId: board.unassignedColumn.id }
+  // Find removed column IDs
+  const removedColumnIds = [...existingColumnIds].filter(
+    (id) => !newColumnIds.has(id)
   );
+
+  // Move tasks from removed columns to unassigned if needed
+  let hasMovedTasks = false;
+  if (removedColumnIds.length > 0) {
+    hasMovedTasks = await moveTasksToUnassigned(board, removedColumnIds);
+  }
+
+  // Update columns while preserving existing IDs but accepting all other new properties
+  let updatedColumns = newColumns.map((newCol) => {
+    const existingColumn = board.columns.find((col) => col.id === newCol.id);
+    if (existingColumn) {
+      // Keep the existing ID but update all other properties
+      return {
+        ...newCol,
+        id: existingColumn.id
+      };
+    }
+    return newCol;
+  });
+
+  // Add unassignedColumn only if tasks were moved there
+  if (hasMovedTasks && !newColumnIds.has(board.unassignedColumn.id)) {
+    updatedColumns.push(board.unassignedColumn);
+  }
+
+  return updatedColumns;
 };
 
 // Handlers
-exports.createBoard = catchAsyncError(async (req, res, next) => {
-  const { name, columns } = req.body;
-
-  const columnsData = columns && columns.length > 0 ? columns : undefined;
-
-  const board = await Board.create({
-    name,
-    columns: columnsData,
-    ownerId: req.user.id
-  });
-
-  res.status(201).json({
-    status: 'success',
-    data: { board }
-  });
-});
-
 exports.getBoards = catchAsyncError(async (req, res, next) => {
   const boards = await Board.find({ ownerId: req.user.id }).select('id name');
 
@@ -87,8 +102,34 @@ exports.getBoard = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.getColumns = catchAsyncError(async (req, res, next) => {
+  const board = await Board.findById(req.params.id).select('columns');
+
+  res.status(200).json({
+    status: 'success',
+    data: { columns: board.columns }
+  });
+});
+
+exports.createBoard = catchAsyncError(async (req, res, next) => {
+  const { name, columns } = req.body;
+
+  const columnsData = columns && columns.length > 0 ? columns : undefined;
+
+  const board = await Board.create({
+    name,
+    columns: columnsData,
+    ownerId: req.user.id
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { board }
+  });
+});
+
 exports.updateBoard = catchAsyncError(async (req, res, next) => {
-  const { name, columns: newColumns } = req.body;
+  const { name, columns } = req.body;
 
   const board = await Board.findById(req.params.id);
 
@@ -98,28 +139,13 @@ exports.updateBoard = catchAsyncError(async (req, res, next) => {
 
   board.name = name;
 
-  await updateBoardColumns(board, newColumns);
+  board.columns = await updateBoardColumns(board, columns);
 
   const updatedBoard = await board.save();
 
   res.status(200).json({
     status: 'success',
     data: { board: updatedBoard }
-  });
-});
-
-exports.deleteBoard = catchAsyncError(async (req, res, next) => {
-  const board = await Board.findByIdAndDelete(req.params.id);
-
-  if (!board) {
-    return next(new AppError('Board not found.', 404));
-  }
-
-  await Task.deleteMany({ boardId: board._id });
-
-  res.status(204).json({
-    status: 'success',
-    data: null
   });
 });
 
@@ -147,11 +173,17 @@ exports.addColumns = catchAsyncError(async (req, res, next) => {
   });
 });
 
-exports.getColumns = catchAsyncError(async (req, res, next) => {
-  const board = await Board.findById(req.params.id);
+exports.deleteBoard = catchAsyncError(async (req, res, next) => {
+  const board = await Board.findByIdAndDelete(req.params.id);
 
-  res.status(200).json({
+  if (!board) {
+    return next(new AppError('Board not found.', 404));
+  }
+
+  await Task.deleteMany({ boardId: board._id });
+
+  res.status(204).json({
     status: 'success',
-    data: { columns: board.columns }
+    data: null
   });
 });
