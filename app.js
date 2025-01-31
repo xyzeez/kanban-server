@@ -15,6 +15,7 @@ const {
 // Routers
 const authRouter = require('./routes/authRoute');
 const boardRouter = require('./routes/boardRoute');
+const taskRouter = require('./routes/taskRoute');
 const userRouter = require('./routes/userRoute');
 
 // App setup
@@ -34,6 +35,7 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 // Endpoints
 app.use(`${API_BASE_URL}/auth`, authRouter);
 app.use(`${API_BASE_URL}/boards`, boardRouter);
+app.use(`${API_BASE_URL}/tasks`, taskRouter);
 app.use(`${API_BASE_URL}/users`, userRouter);
 
 // Error Handlers

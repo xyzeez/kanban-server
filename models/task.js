@@ -1,8 +1,5 @@
 const { model, Schema } = require('mongoose');
 
-// Models
-const Board = require('./board');
-
 // Utils
 const AppError = require('../utils/appError');
 
@@ -14,7 +11,7 @@ const validateSubtasksLength = (subtasks) => {
     return (
       typeof subtask.title === 'string' &&
       subtask.title.length >= 2 &&
-      subtask.title.length <= 50
+      subtask.title.length <= 100
     );
   });
 };
@@ -41,30 +38,28 @@ const taskSchema = new Schema(
       trim: true,
       required: [true, 'Task title is required.'],
       minlength: [2, 'Task title must be at least 3 characters long.'],
-      maxlength: [15, 'Task title cannot exceed 150 characters.']
+      maxlength: [150, 'Task title cannot exceed 150 characters.']
     },
     description: {
       type: String,
       trim: true,
-      maxlength: [50, 'Task description cannot exceed 500 characters.']
+      maxlength: [500, 'Task description cannot exceed 500 characters.']
     },
     subtasks: {
       type: [subtaskSchema],
       default: [],
       validate: [
         validateSubtasksLength,
-        'Each subtask must be a string of 2-50 characters long'
+        'Each subtask must be a string of 2-100 characters long'
       ]
+    },
+    columnId: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'Task column id is required.']
     },
     boardId: {
       type: Schema.Types.ObjectId,
-      ref: 'Board',
-      required: [true, 'Task board id is required.']
-    },
-    columnId: {
-      type: String,
-      trim: true,
-      required: [true, 'Task column id is required.']
+      required: [true, 'Board ID is required']
     }
   },
   {
@@ -78,52 +73,35 @@ const taskSchema = new Schema(
 
 // Schema indexing
 taskSchema.index(
-  { title: 1, boardId: 1, columnId: 1 },
+  { title: 1, columnId: 1 },
   {
     unique: true,
-    collation: { locale: 'en', strength: 2 }
+    collation: { locale: 'en', strength: 2, caseLevel: false },
+    name: 'unique_title_per_column'
   }
 );
 
-// Middlewares
-taskSchema.pre('save', async function (next) {
-  if (!this.isModified('columnId')) return next();
-
-  const board = await Board.findById(this.boardId);
-
-  if (!board) {
-    return next(
-      new AppError('The board associated with this task does not exist.', 400)
-    );
-  }
-
-  const boardcolumnId = board.columns.map((col) => col.id);
-
-  if (!boardcolumnId.includes(this.columnId)) {
-    return next(
-      new AppError(
-        `Column must be one of: ${board.columns
-          .map((col) => col.title)
-          .join(', ')}.`,
-        400
-      )
-    );
-  }
-
-  next();
+// Virtuals
+taskSchema.virtual('doneSubtaskCount').get(function () {
+  return this.subtasks.filter((subtask) => subtask.completed).length;
 });
 
+// Middlewares
 taskSchema.post('save', function (error, doc, next) {
-  if (error.code === 11000 && error.keyValue.name) {
-    return next(
+  if (error.code === 11000) {
+    next(
       new AppError(
-        `A task with the name "${error.keyValue.name}" already exists.`,
+        `A task with ${
+          error.keyValue.title
+            ? `the title "${error.keyValue.title}"`
+            : 'this title'
+        } already exists in this column`,
         409
       )
     );
+  } else {
+    next(error);
   }
-
-  next(error);
 });
 
 // Model
