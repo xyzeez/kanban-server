@@ -11,7 +11,6 @@ const {
   getColumns,
   addColumns
 } = require('../controllers/boardController');
-const { createTask, updateTask } = require('../controllers/taskController');
 
 // Router
 const router = express.Router({ mergeParams: true });
@@ -20,14 +19,10 @@ const router = express.Router({ mergeParams: true });
 router.use(protectRoute);
 
 // Endpoints
-router.route('/').post(createBoard).get(getBoards);
+router.route('/').get(getBoards).post(createBoard);
 
 router.route('/:id').get(getBoard).patch(updateBoard).delete(deleteBoard);
 
 router.route('/:id/columns').get(getColumns).post(addColumns);
-
-router.route('/:boardId/columns/:columnId/tasks').post(createTask);
-
-router.route('/:boardId/columns/:columnId/tasks/:taskId').patch(updateTask);
 
 module.exports = router;
