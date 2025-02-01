@@ -61,7 +61,7 @@ const updateBoardColumns = async (board, newColumns) => {
   }
 
   // Update columns while preserving existing IDs but accepting all other new properties
-  let updatedColumns = newColumns.map((newCol) => {
+  const updatedColumns = newColumns.map((newCol) => {
     const existingColumn = board.columns.find((col) => col.id === newCol.id);
     if (existingColumn) {
       // Keep the existing ID but update all other properties
@@ -180,7 +180,7 @@ exports.deleteBoard = catchAsyncError(async (req, res, next) => {
     return next(new AppError('Board not found.', 404));
   }
 
-  await Task.deleteMany({ boardId: board._id });
+  await Task.deleteMany({ boardId: board.id });
 
   res.status(204).json({
     status: 'success',

@@ -9,6 +9,6 @@ exports.createUser = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({
     status: 'success',
-    user
+    data: { user }
   });
 });

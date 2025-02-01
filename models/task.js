@@ -17,19 +17,26 @@ const validateSubtasksLength = (subtasks) => {
 };
 
 // Schemas
-const subtaskSchema = new Schema({
-  title: {
-    type: String,
-    trim: true,
-    required: [true, 'Subtask title is required.'],
-    minlength: [2, 'Subtask title must be at least 2 characters long.'],
-    maxlength: [100, 'Subtask title cannot exceed 100 characters.']
+const subtaskSchema = new Schema(
+  {
+    title: {
+      type: String,
+      trim: true,
+      required: [true, 'Subtask title is required.'],
+      minlength: [2, 'Subtask title must be at least 2 characters long.'],
+      maxlength: [100, 'Subtask title cannot exceed 100 characters.']
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    }
   },
-  completed: {
-    type: Boolean,
-    default: false
+  {
+    toJSON: {
+      versionKey: false
+    }
   }
-});
+);
 
 const taskSchema = new Schema(
   {

@@ -10,7 +10,7 @@ const catchAsyncError = require('../utils/catchAsyncError');
 
 // Helpers
 const validateAssignedUser = catchAsyncError(async (userId) => {
-  return await User.exists({ _id: userId });
+  return await User.exists({ id: userId });
 });
 
 const validateColumnsLength = (columns) => {
@@ -47,7 +47,6 @@ const columnSchema = new Schema(
   },
   {
     toJSON: {
-      virtuals: true,
       versionKey: false
     }
   }

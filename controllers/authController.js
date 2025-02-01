@@ -35,8 +35,7 @@ const createSendToken = (user, statusCode, res) => {
 
   res.status(statusCode).json({
     status: 'success',
-    token,
-    user
+    data: { token, user }
   });
 };
 
@@ -111,7 +110,7 @@ exports.logout = (req, res) => {
     httpOnly: true
   });
 
-  res.status(200).json({ status: 'success' });
+  res.status(200).json({ status: 'success', data: null });
 };
 
 exports.getCurrentAuthUser = catchAsyncError(async (req, res, next) => {
@@ -119,6 +118,6 @@ exports.getCurrentAuthUser = catchAsyncError(async (req, res, next) => {
 
   res.status(201).json({
     status: 'success',
-    user
+    data: { user }
   });
 });
