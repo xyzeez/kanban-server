@@ -99,9 +99,7 @@ taskSchema.post('save', function (error, doc, next) {
     next(
       new AppError(
         `A task with ${
-          error.keyValue.title
-            ? `the title "${error.keyValue.title}"`
-            : 'this title'
+          doc.title ? `the title "${doc.title}"` : 'this title'
         } already exists in this column`,
         409
       )

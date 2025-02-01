@@ -36,19 +36,23 @@ exports.createTask = catchAsyncError(async (req, res, next) => {
 });
 
 exports.updateTask = catchAsyncError(async (req, res, next) => {
-  const { title, description, subtasks } = req.body;
+  const { id } = req.params;
+  const { title, description, subtasks, columnId, boardId } = req.body;
 
-  const { taskId } = req.params;
-
-  const task = await Task.findById(taskId);
+  const task = await Task.findById(id);
 
   if (!task) {
     return next(new AppError('Task not found', 404));
   }
 
-  task.title = title;
-  task.description = description;
-  task.subtasks = subtasks;
+  if (boardId !== undefined && boardId !== task.boardId.toString()) {
+    return next(new AppError('Cannot change task board after creation', 400));
+  }
+
+  if (title !== undefined) task.title = title;
+  if (description !== undefined) task.description = description;
+  if (subtasks !== undefined) task.subtasks = subtasks;
+  if (columnId !== undefined) task.columnId = columnId;
 
   const updatedTask = await task.save();
 
@@ -56,4 +60,15 @@ exports.updateTask = catchAsyncError(async (req, res, next) => {
     status: 'success',
     data: { task: updatedTask }
   });
+});
+
+exports.deleteTask = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const task = await Task.findByIdAndDelete(id);
+
+  if (!task) {
+    return next(new AppError('Task not found', 404));
+  }
+
+  res.status(204).json({ status: 'success', data: null });
 });
