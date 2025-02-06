@@ -9,7 +9,7 @@ const catchAsyncError = require('../utils/catchAsyncError');
 exports.getTasks = catchAsyncError(async (req, res, next) => {
   const { columnId } = req.query;
 
-  const tasks = await Task.find({ columnId });
+  const tasks = await Task.find({ columnId }).sort({ createdAt: -1 });
 
   res.status(200).json({
     status: 'success',

@@ -8,7 +8,9 @@ const AppError = require('../utils/appError');
 
 // Handlers
 exports.getBoards = catchAsyncError(async (req, res, next) => {
-  const boards = await Board.find({ ownerId: req.user.id }).select('id name');
+  const boards = await Board.find({ ownerId: req.user.id })
+    .select('id name')
+    .sort({ createdAt: -1 });
 
   res.status(200).json({
     status: 'success',
