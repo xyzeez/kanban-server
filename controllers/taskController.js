@@ -17,6 +17,21 @@ exports.getTasks = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.getTask = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+
+  const task = await Task.findById(id);
+
+  if (!task) {
+    return next(new AppError('Task not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { task }
+  });
+});
+
 exports.createTask = catchAsyncError(async (req, res, next) => {
   const { title, description, subtasks } = req.body;
   const { columnId, boardId } = req.query;

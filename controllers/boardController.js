@@ -1,7 +1,6 @@
 // Models
 const Board = require('../models/board');
 const Task = require('../models/task');
-const mongoose = require('mongoose');
 
 // Utils
 const catchAsyncError = require('../utils/catchAsyncError');
