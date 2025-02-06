@@ -26,7 +26,6 @@ const init = () => {
       mongoose.set('toJSON', {
         transform: function (doc, ret) {
           ret.id = ret._id;
-          delete ret._id;
           return ret;
         }
       });
