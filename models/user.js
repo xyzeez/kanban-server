@@ -6,6 +6,20 @@ const bcrypt = require('bcryptjs');
 const AppError = require('../utils/appError');
 
 // Helpers
+function validatePasswordStrength(password) {
+  if (password.length < 12) return false;
+
+  if (!/[A-Z]/.test(password)) return false;
+
+  if (!/[a-z]/.test(password)) return false;
+
+  if (!/[0-9]/.test(password)) return false;
+
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
+
+  return true;
+}
+
 function validateConfirmPassword(confirmPassword) {
   return this.password === confirmPassword;
 }
@@ -24,7 +38,10 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, 'Kindly provide a password'],
-      minLength: [8, 'Password must contain at lease 8 characters'],
+      validate: [
+        validatePasswordStrength,
+        'Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      ],
       select: false
     },
     passwordConfirm: {
