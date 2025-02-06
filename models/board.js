@@ -1,5 +1,6 @@
 const { model, Schema } = require('mongoose');
 const slugify = require('slugify');
+const mongoose = require('mongoose');
 
 // Models
 const User = require('./user');
@@ -36,6 +37,10 @@ const validateColumnsUnique = (columns) => {
 // Schemas
 const columnSchema = new Schema(
   {
+    _id: {
+      type: Schema.Types.ObjectId,
+      default: () => new mongoose.Types.ObjectId()
+    },
     title: {
       type: String,
       trim: true,
@@ -47,7 +52,11 @@ const columnSchema = new Schema(
   },
   {
     toJSON: {
-      versionKey: false
+      virtuals: true,
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        return ret;
+      }
     }
   }
 );
@@ -77,7 +86,6 @@ const boardSchema = new Schema(
         }
       ]
     },
-    unassignedColumn: columnSchema,
     ownerId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -110,14 +118,6 @@ boardSchema.virtual('slug').get(function () {
 });
 
 // Middlewares
-boardSchema.pre('save', async function (next) {
-  if (!this.isNew) return next();
-
-  this.unassignedColumn = { title: 'unassigned' };
-
-  next();
-});
-
 boardSchema.pre('save', async function (next) {
   if (this.name) {
     this.name = this.name.replace(/\s+/g, ' ');
