@@ -77,6 +77,25 @@ exports.updateTask = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.updateSubtasks = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const { subtasks } = req.body;
+
+  const task = await Task.findById(id);
+
+  if (!task) {
+    return next(new AppError('Task not found', 404));
+  }
+
+  task.subtasks = subtasks;
+  const updatedTask = await task.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: { task: updatedTask }
+  });
+});
+
 exports.deleteTask = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
   const task = await Task.findByIdAndDelete(id);
