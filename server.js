@@ -9,6 +9,7 @@ const {
   monitorUncaughtRejection,
   monitorUnhandledRejection
 } = require('./utils/monitorRejections');
+const cleanupDatabase = require('./utils/cleanupService');
 
 // Configs
 const { PORT, DB } = require('./config');
@@ -30,7 +31,16 @@ const init = () => {
         }
       });
     })
-    .then(() => console.log('Database connection successful'))
+    .then(() => {
+      console.log('Database connection successful');
+
+      // Schedule database cleanup to run daily at midnight
+      const CLEANUP_INTERVAL = process.env.CLEANUP_INTERVAL_HOURS || 24;
+      setInterval(cleanupDatabase, CLEANUP_INTERVAL * 60 * 60 * 1000);
+      console.log(
+        `Database cleanup scheduled to run every ${CLEANUP_INTERVAL} hours`
+      );
+    })
     .catch((err) => console.error('Database connection error:', err));
 
   const server = app.listen(PORT, () => {
