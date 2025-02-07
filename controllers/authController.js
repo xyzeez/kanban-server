@@ -19,14 +19,14 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, res, remember = false) => {
   const token = signToken(user.id);
 
   const cookieOptions = {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict',
-    maxAge: COOKIE_EXPIRY_DAYS
+    maxAge: remember ? COOKIE_EXPIRY_DAYS : 24 * 60 * 60 * 1000
   };
 
   res.cookie('authToken', token, cookieOptions);
@@ -90,7 +90,7 @@ exports.register = catchAsyncError(async (req, res, next) => {
 });
 
 exports.login = catchAsyncError(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, remember } = req.body;
 
   if (!email || !password) {
     return next(new AppError('Please provide email and password!', 400));
@@ -101,7 +101,7 @@ exports.login = catchAsyncError(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, res, remember);
 });
 
 exports.logout = (req, res) => {
