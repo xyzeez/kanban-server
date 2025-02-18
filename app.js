@@ -2,9 +2,14 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 // Configs
-const { API_BASE_URL, ORIGIN_URL } = require('./config');
+const { API_BASE_URL, ORIGIN_URL, RATE_LIMIT } = require('./config');
 
 // Controllers
 const {
@@ -22,15 +27,27 @@ const userRouter = require('./routes/userRoute');
 const app = express();
 
 // Middlewares
-app.use(express.json());
+app.use(helmet());
+
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+
+if (process.env.NODE_ENV === 'production')
+  app.use(API_BASE_URL, rateLimit(RATE_LIMIT));
+
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
+
+app.use(mongoSanitize());
+app.use(xss());
+app.use(hpp());
+
 app.use(
   cors({
     origin: ORIGIN_URL,
     credentials: true
   })
 );
-if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 // Endpoints
 app.use(`${API_BASE_URL}/auth`, authRouter);
