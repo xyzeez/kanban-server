@@ -9,7 +9,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 
 // Configs
-const { API_BASE_URL, ORIGIN_URL, RATE_LIMIT } = require('./config');
+const { API_BASE_URL, ALLOWED_ORIGINS, RATE_LIMIT } = require('./config');
 
 // Controllers
 const {
@@ -44,7 +44,7 @@ app.use(hpp());
 
 app.use(
   cors({
-    origin: ORIGIN_URL,
+    origin: ALLOWED_ORIGINS,
     credentials: true
   })
 );

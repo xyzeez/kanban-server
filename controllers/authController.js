@@ -3,7 +3,12 @@ const jwt = require('jsonwebtoken');
 const { isJWT } = require('validator');
 
 // Configs
-const { COOKIE_EXPIRY_DAYS, JWT_EXPIRES_IN } = require('../config');
+const {
+  COOKIE_EXPIRY_DAYS,
+  JWT_EXPIRES_IN,
+  COOKIE_OPTIONS,
+  COOKIE_NAME
+} = require('../config');
 
 // Models
 const User = require('../models/user');
@@ -22,14 +27,10 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, res, remember = false) => {
   const token = signToken(user.id);
 
-  const cookieOptions = {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'strict',
+  res.cookie(COOKIE_NAME, token, {
+    ...COOKIE_OPTIONS,
     maxAge: remember ? COOKIE_EXPIRY_DAYS : 24 * 60 * 60 * 1000
-  };
-
-  res.cookie('authToken', token, cookieOptions);
+  });
 
   user.password = undefined;
 
@@ -45,12 +46,12 @@ exports.protectRoute = catchAsyncError(async (req, res, next) => {
 
   if (
     (!authorization || !authorization.startsWith('Bearer')) &&
-    !req.cookies?.authToken
+    !req.cookies?.[COOKIE_NAME]
   ) {
     return next(new AppError('Authentication failed. Please login.', 401));
   }
 
-  const token = authorization?.split(' ')[1] || req.cookies?.authToken;
+  const token = authorization?.split(' ')[1] || req.cookies?.[COOKIE_NAME];
 
   if (!token || !isJWT(token)) {
     return next(new AppError('Authentication failed. Please login.', 401));
@@ -105,9 +106,9 @@ exports.login = catchAsyncError(async (req, res, next) => {
 });
 
 exports.logout = (req, res) => {
-  res.cookie('authToken', undefined, {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+  res.cookie(COOKIE_NAME, undefined, {
+    ...COOKIE_OPTIONS,
+    expires: new Date(Date.now() + 10 * 1000)
   });
 
   res.status(200).json({ status: 'success', data: null });
