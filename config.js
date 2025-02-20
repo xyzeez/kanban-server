@@ -1,7 +1,4 @@
-exports.DB =
-  process.env.NODE_ENV === 'production'
-    ? process.env.LIVE_DB
-    : process.env.LOCAL_DB;
+exports.DB = process.env.DB;
 
 exports.PORT = 3000;
 

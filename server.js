@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
 // env
-dotenv.config();
+dotenv.config({ path: ['.env', `.env.${process.env.NODE_ENV}`] });
 
 // Utils
 const {
