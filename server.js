@@ -27,6 +27,10 @@ const init = () => {
   console.log('\n========== SERVER INITIALIZATION ==========\n');
   console.log('Starting server initialization process...\n');
 
+  if (process.env.NODE_RESTART_AFTER_SIGTERM) {
+    console.log('Server restarting after SIGTERM shutdown...\n');
+  }
+
   monitorUncaughtRejection();
 
   mongoose
@@ -54,7 +58,10 @@ const init = () => {
 
   monitorUnhandledRejection(server);
 
-  process.on('SIGTERM', () => gracefulShutdown({ server, cleanupInterval }));
+  process.on('SIGTERM', () => {
+    process.env.NODE_RESTART_AFTER_SIGTERM = 'true';
+    gracefulShutdown({ server, cleanupInterval });
+  });
 };
 
 // Start Server
