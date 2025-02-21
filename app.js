@@ -26,6 +26,9 @@ const userRouter = require('./routes/userRoute');
 // App setup
 const app = express();
 
+// Enable trust proxy
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
+
 // Middlewares
 app.use(helmet());
 
