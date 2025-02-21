@@ -9,8 +9,10 @@ const {
   monitorUncaughtRejection,
   monitorUnhandledRejection
 } = require('./utils/monitorRejections');
-const cleanupDatabase = require('./utils/cleanupService');
-const gracefulShutdown = require('./utils/shutdownService');
+
+// Services
+const cleanupDatabase = require('./services/cleanupService');
+const gracefulShutdown = require('./services/shutdownService');
 
 // Configs
 const { PORT, DB } = require('./config');
@@ -22,6 +24,9 @@ let cleanupInterval;
 
 // Server setup
 const init = () => {
+  console.log('\n========== SERVER INITIALIZATION ==========\n');
+  console.log('Starting server initialization process...\n');
+
   monitorUncaughtRejection();
 
   mongoose
@@ -33,24 +38,18 @@ const init = () => {
           return ret;
         }
       });
-    })
-    .then(() => {
-      console.log('Database connection successful');
+      console.log('✓ Database connection established\n');
 
-      // Schedule database cleanup to run daily at midnight
-      const CLEANUP_INTERVAL = process.env.CLEANUP_INTERVAL_HOURS || 24;
-      cleanupInterval = setInterval(
-        cleanupDatabase,
-        CLEANUP_INTERVAL * 60 * 60 * 1000
-      );
-      console.log(
-        `Database cleanup scheduled to run every ${CLEANUP_INTERVAL} hours`
-      );
+      cleanupInterval = setInterval(cleanupDatabase, 24 * 60 * 60 * 1000);
+      console.log('✓ Database cleanup scheduled (daily)\n');
+      console.log('==========================================\n');
     })
-    .catch((err) => console.error('Database connection error:', err));
+    .catch((err) => {
+      console.error('Database connection failed:\n', err);
+    });
 
   server = app.listen(PORT, () => {
-    console.log(`App running on port ${PORT}...`);
+    console.log(`✓ Server listening on port ${PORT}\n`);
   });
 
   monitorUnhandledRejection(server);
