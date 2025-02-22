@@ -9,7 +9,7 @@ const catchAsyncError = require('../utils/catchAsyncError');
 exports.getTasks = catchAsyncError(async (req, res, next) => {
   const { columnId } = req.query;
 
-  const tasks = await Task.find({ columnId }).sort({ createdAt: -1 });
+  const tasks = await Task.find({ columnId }).sort({ position: 1 });
 
   res.status(200).json({
     status: 'success',
@@ -36,12 +36,19 @@ exports.createTask = catchAsyncError(async (req, res, next) => {
   const { title, description, subtasks } = req.body;
   const { columnId, boardId } = req.query;
 
+  // Get the highest position in the column
+  const highestPositionTask = await Task.findOne({ columnId }).sort({
+    position: -1
+  });
+  const position = highestPositionTask ? highestPositionTask.position + 1 : 0;
+
   const task = await Task.create({
     title,
     description,
     subtasks,
     columnId,
-    boardId
+    boardId,
+    position
   });
 
   res.status(201).json({
@@ -124,4 +131,76 @@ exports.deleteTask = catchAsyncError(async (req, res, next) => {
   }
 
   res.status(204).json({ status: 'success', data: null });
+});
+
+exports.updateTaskPosition = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const { position, columnId: newColumnId } = req.body;
+
+  const task = await Task.findById(id);
+  if (!task) {
+    return next(new AppError('Task not found', 404));
+  }
+
+  const oldColumnId = task.columnId;
+  const oldPosition = task.position;
+
+  // If moving to a new column
+  if (newColumnId && newColumnId !== oldColumnId.toString()) {
+    // Update positions in the old column
+    await Task.updateMany(
+      {
+        columnId: oldColumnId,
+        position: { $gt: oldPosition }
+      },
+      { $inc: { position: -1 } }
+    );
+
+    // Get the highest position in the new column
+    const highestPositionTask = await Task.findOne({
+      columnId: newColumnId
+    }).sort({ position: -1 });
+    const newPosition =
+      position ?? (highestPositionTask ? highestPositionTask.position + 1 : 0);
+
+    // Update the task
+    task.columnId = newColumnId;
+    task.position = newPosition;
+
+    // Update positions in the new column if position is specified
+    if (position !== undefined) {
+      await Task.updateMany(
+        {
+          columnId: newColumnId,
+          position: { $gte: newPosition }
+        },
+        { $inc: { position: 1 } }
+      );
+    }
+  }
+  // If reordering within the same column
+  else if (position !== undefined && position !== oldPosition) {
+    const increment = position > oldPosition ? -1 : 1;
+    const range =
+      position > oldPosition
+        ? { $gt: oldPosition, $lte: position }
+        : { $gte: position, $lt: oldPosition };
+
+    await Task.updateMany(
+      {
+        columnId: oldColumnId,
+        position: range
+      },
+      { $inc: { position: increment } }
+    );
+
+    task.position = position;
+  }
+
+  const updatedTask = await task.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: { task: updatedTask }
+  });
 });

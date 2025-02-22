@@ -60,6 +60,11 @@ const taskSchema = new Schema(
         'Each subtask must be a string of 2-100 characters long'
       ]
     },
+    position: {
+      type: Number,
+      required: true,
+      default: 0
+    },
     columnId: {
       type: Schema.Types.ObjectId,
       required: [true, 'Task column id is required.']
