@@ -17,6 +17,9 @@ const User = require('../models/user');
 const catchAsyncError = require('../utils/catchAsyncError');
 const AppError = require('../utils/appError');
 
+// Services
+const createDemoData = require('../services/demoService');
+
 // Helpers
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
@@ -86,6 +89,8 @@ exports.register = catchAsyncError(async (req, res, next) => {
   const { email, password, passwordConfirm } = req.body;
 
   const user = await User.create({ email, password, passwordConfirm });
+
+  await createDemoData(user._id);
 
   createSendToken(user, 201, res);
 });

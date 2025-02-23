@@ -1,0 +1,74 @@
+{
+  "board": {
+    "name": "my first project",
+    "columns": [
+      { "title": "todo" },
+      { "title": "in progress" },
+      { "title": "review" },
+      { "title": "done" }
+    ]
+  },
+  "tasks": [
+    {
+      "title": "Welcome to your Kanban board! 👋",
+      "description": "This is a demo task to help you get started. Feel free to edit or delete it!",
+      "subtasks": [
+        {
+          "title": "Try dragging this task to another column",
+          "completed": false
+        },
+        {
+          "title": "Click on this task to see its details",
+          "completed": false
+        },
+        { "title": "Edit the task title or description", "completed": false }
+      ],
+      "columnIndex": 0,
+      "position": 0
+    },
+    {
+      "title": "Create your first task ✨",
+      "description": "Click the \"+ Add New Task\" button at the top of any column to create a new task.",
+      "subtasks": [
+        { "title": "Give your task a clear title", "completed": false },
+        { "title": "Add a helpful description", "completed": false },
+        { "title": "Break it down into subtasks", "completed": false }
+      ],
+      "columnIndex": 0,
+      "position": 1
+    },
+    {
+      "title": "Working on my first task 🚀",
+      "description": "This task shows you what a task looks like when it's in progress.",
+      "subtasks": [
+        { "title": "Start working on the task", "completed": true },
+        { "title": "Update progress regularly", "completed": true },
+        { "title": "Move to review when done", "completed": false }
+      ],
+      "columnIndex": 1,
+      "position": 0
+    },
+    {
+      "title": "Ready for review ✅",
+      "description": "This task is ready to be reviewed by the team.",
+      "subtasks": [
+        { "title": "Code implementation complete", "completed": true },
+        { "title": "Documentation updated", "completed": true },
+        { "title": "Get team feedback", "completed": false }
+      ],
+      "columnIndex": 2,
+      "position": 0
+    },
+    {
+      "title": "Task completed! 🎉",
+      "description": "Congratulations! This task has been completed and can serve as a reference.",
+      "subtasks": [
+        { "title": "Implement core functionality", "completed": true },
+        { "title": "Test thoroughly", "completed": true },
+        { "title": "Deploy to production", "completed": true }
+      ],
+      "columnIndex": 3,
+      "position": 0
+    }
+  ]
+}
